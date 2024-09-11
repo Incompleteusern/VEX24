@@ -128,7 +128,7 @@ void opcontrol() {
 		}
 
 		// delay to save resources
-        pros::delay(25);
+		pros::delay(25);
 
 	}
 

@@ -27,6 +27,17 @@ void activate_curvature() {
 	pros::lcd::set_text(1, "Curvature");
 }
 
+double logDrive(double v, double pow = 2) {
+    if (v > 0)
+    {
+        return (std::pow(std::abs(v), pow) / std::pow(127, pow)) * 127;
+    }
+    else
+    {
+        return -1 * (std::pow(std::abs(v), pow) / std::pow(127, pow)) * 127;
+    }
+}
+
 
 
 /**
@@ -103,20 +114,20 @@ void opcontrol() {
 			int rightY = controller.get_analog(ANALOG_RIGHT_Y);
 
 			// move the robot
-			chassis.tank(leftY, rightY);
+			chassis.tank(logDrive(leftY), logDrive(rightY));
 		} else if (driveType == DriveType::Arcade) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
 			int rightX = controller.get_analog(ANALOG_RIGHT_X);
 
 			// move the robot
-			chassis.arcade(leftY, rightX);
+			chassis.arcade(logDrive(leftY), logDrive(rightX));
 		} else if (driveType == DriveType::Curvature) {
 			// get left y and right x positions
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
 			int rightX = controller.get_analog(ANALOG_RIGHT_X);
 
 			// move the robot
-			chassis.curvature(leftY, rightX);
+			chassis.curvature(logDrive(leftY), logDrive(rightX));
 		}
 
 		if (controller.get_digital(DIGITAL_A)) {
@@ -133,3 +144,4 @@ void opcontrol() {
 	}
 
 }
+

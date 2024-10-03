@@ -11,7 +11,7 @@ enum class DriveType
 };
 
 static DriveType driveType = DriveType::Arcade;
-static bool intakeActive = true;
+static bool intakeActive = false;
 static bool intakeToggle = false;
 
 void activate_tank_drive() {

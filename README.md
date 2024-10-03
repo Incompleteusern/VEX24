@@ -1,1 +1,1 @@
-# VEX24
+# VEX24 Highstakes

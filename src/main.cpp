@@ -11,6 +11,8 @@ enum class DriveType
 };
 
 static DriveType driveType = DriveType::Arcade;
+static bool intakeActive = true;
+static bool intakeToggle = false;
 
 void activate_tank_drive() {
 	driveType = DriveType::Tank;
@@ -25,6 +27,19 @@ void activate_arcade() {
 void activate_curvature() {
 	driveType = DriveType::Curvature;
 	pros::lcd::set_text(1, "Curvature");
+}
+
+void updateIntake() {
+	pros::lcd::set_text(2, "Intake Active:" + std::to_string(intakeActive));
+	pros::lcd::set_text(1, "Intake Toggle: " + std::to_string(intakeToggle));
+
+	if (!intakeActive) {
+		intake.move(0);
+		return;
+	}
+
+	int sign = intakeToggle ? -1 : 1;
+	intake.move(sign * 127);
 }
 
 double logDrive(double v, double pow = 2) {
@@ -130,12 +145,23 @@ void opcontrol() {
 			chassis.curvature(logDrive(leftY), logDrive(rightX));
 		}
 
-		if (controller.get_digital(DIGITAL_A)) {
+		if (controller.get_digital_new_press(DIGITAL_A)) {
 			activate_tank_drive();
-		} else if (controller.get_digital(DIGITAL_B)) {
+		} else if (controller.get_digital_new_press(DIGITAL_B)) {
 			activate_arcade();
-		} else if (controller.get_digital(DIGITAL_X)) {
+		} else if (controller.get_digital_new_press(DIGITAL_X)) {
 			activate_curvature();
+		}
+
+		if (controller.get_digital_new_press(DIGITAL_L1)) {
+			intakeActive = !intakeActive;
+			if (!intakeActive) {
+				intakeToggle = false;
+			}
+			updateIntake();
+		} else if (controller.get_digital_new_press(DIGITAL_L2)) {
+			intakeToggle = !intakeToggle;
+			updateIntake();
 		}
 
 		// delay to save resources

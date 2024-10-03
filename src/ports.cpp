@@ -5,8 +5,10 @@
 #define rpm 450
 #define wheel_type lemlib::Omniwheel::NEW_275
 
-pros::MotorGroup left_motors({-1, 2, 3}, pros::MotorGearset::blue); 
-pros::MotorGroup right_motors({10, -9, -8}, pros::MotorGearset::blue); 
+pros::MotorGroup left_motors({10, -9, -8}, pros::MotorGearset::blue); 
+pros::MotorGroup right_motors({-1, 2, 3}, pros::MotorGearset::blue); 
+
+pros::Motor intake(4, pros::MotorGearset::blue);
 
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group

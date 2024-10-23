@@ -5,28 +5,34 @@ pros::Controller controller(CONTROLLER_MASTER);
 
 enum class DriveType
 {
-    Tank,
-    Arcade,
-	Curvature
+    Tank = 0,
+    Arcade = 1,
+	Curvature = 2
 };
 
-static DriveType driveType = DriveType::Arcade;
+const char * names[] = {
+	"Tank Drive", "Arcade", "Curvature"
+};
+
+static DriveType driveType = DriveType::Curvature;
 static bool intakeActive = false;
 static bool intakeToggle = false;
 
-void activate_tank_drive() {
-	driveType = DriveType::Tank;
-	pros::lcd::set_text(1, "Tank Drive");
-}
+static bool pistonActive = true;
 
-void activate_arcade() {
-	driveType = DriveType::Arcade;
-	pros::lcd::set_text(1, "Arcade");
-}
-
-void activate_curvature() {
-	driveType = DriveType::Curvature;
-	pros::lcd::set_text(1, "Curvature");
+void cycle_drive_type() {
+	switch (driveType) {
+		case DriveType::Tank: 
+			driveType = DriveType::Arcade;
+			break;
+		case DriveType::Arcade:
+			driveType = DriveType::Curvature;
+			break;
+		case DriveType::Curvature:
+			driveType = DriveType::Tank;
+			break;
+	}
+	pros::lcd::set_text(1, names[static_cast<int>(driveType)]);
 }
 
 void updateIntake() {
@@ -52,8 +58,6 @@ double logDrive(double v, double pow = 2) {
         return -1 * (std::pow(std::abs(v), pow) / std::pow(127, pow)) * 127;
     }
 }
-
-
 
 /**
  * A callback function for LLEMU's center button.
@@ -146,11 +150,8 @@ void opcontrol() {
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_A)) {
-			activate_tank_drive();
-		} else if (controller.get_digital_new_press(DIGITAL_B)) {
-			activate_arcade();
-		} else if (controller.get_digital_new_press(DIGITAL_X)) {
-			activate_curvature();
+			pistonActive = !pistonActive;
+			piston.set_value(pistonActive ? 1 : 0);
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_L1)) {

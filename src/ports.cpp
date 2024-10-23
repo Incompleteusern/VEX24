@@ -4,6 +4,9 @@
 #define track_width 12.6
 #define rpm 450
 #define wheel_type lemlib::Omniwheel::NEW_275
+#define ANALOG_SENSOR_PORT 'A'
+
+pros::adi::DigitalOut piston (ANALOG_SENSOR_PORT);
 
 pros::MotorGroup left_motors({1, -2, -3}, pros::MotorGearset::blue); 
 pros::MotorGroup right_motors({-10, 9, 8}, pros::MotorGearset::blue); 

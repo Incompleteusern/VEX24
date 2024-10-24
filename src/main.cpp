@@ -10,7 +10,7 @@ enum class DriveType
 	Curvature = 2
 };
 
-const char * names[] = {
+const std::string names[] = {
 	"Tank Drive", "Arcade", "Curvature"
 };
 
@@ -19,6 +19,10 @@ static bool intakeActive = false;
 static bool intakeToggle = false;
 
 static bool pistonActive = true;
+
+void print_type() {
+		pros::lcd::set_text(1, "Control Type: " + names[static_cast<int>(driveType)]);
+}
 
 void cycle_drive_type() {
 	switch (driveType) {
@@ -32,21 +36,29 @@ void cycle_drive_type() {
 			driveType = DriveType::Tank;
 			break;
 	}
-	pros::lcd::set_text(1, names[static_cast<int>(driveType)]);
+	print_type();
+}
+
+std::string onoff(bool b) {
+	return b ? "On" : "Off";
+}
+
+void print_intake() {
+	pros::lcd::set_text(2, "Intake Toggle: " + onoff(intakeToggle));
+	pros::lcd::set_text(3, "Intake Active: " + onoff(intakeActive));
 }
 
 void updateIntake() {
-	pros::lcd::set_text(2, "Intake Active:" + std::to_string(intakeActive));
-	pros::lcd::set_text(1, "Intake Toggle: " + std::to_string(intakeToggle));
-
 	if (!intakeActive) {
 		intake.move(0);
-		return;
+	} else {
+		int sign = intakeToggle ? -1 : 1;
+		intake.move(sign * 127);
 	}
 
-	int sign = intakeToggle ? -1 : 1;
-	intake.move(sign * 127);
+	print_intake();
 }
+
 
 double logDrive(double v, double pow = 2) {
     if (v > 0)
@@ -72,12 +84,13 @@ void on_center_button() {
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
- * All other competition modes are blocked by initialize; it is recommended
+ * All other competition modes are geblocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
 	pros::lcd::initialize();
-	pros::lcd::set_text(1, "Hello PROS User!");
+	print_type();
+	print_intake();
 
 	pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -152,6 +165,10 @@ void opcontrol() {
 		if (controller.get_digital_new_press(DIGITAL_A)) {
 			pistonActive = !pistonActive;
 			piston.set_value(pistonActive ? 1 : 0);
+		}
+
+		if (controller.get_digital_new_press(DIGITAL_B)) {
+			cycle_drive_type();
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_L1)) {

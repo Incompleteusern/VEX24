@@ -1,5 +1,6 @@
 #include "main.h"
 #include "ports.h"
+#include "lvgl.h"
 
 pros::Controller controller(CONTROLLER_MASTER);
 
@@ -44,8 +45,8 @@ std::string onoff(bool b) {
 }
 
 void print_intake() {
-	pros::lcd::set_text(2, "Intake Toggle: " + onoff(intakeToggle));
-	pros::lcd::set_text(3, "Intake Active: " + onoff(intakeActive));
+	// pros::lcd::set_text(2, "Intake Toggle: " + onoff(intakeToggle));
+	// pros::lcd::set_text(3, "Intake Active: " + onoff(intakeActive));
 }
 
 void updateIntake() {
@@ -88,11 +89,12 @@ void on_center_button() {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	pros::lcd::initialize();
+	// pros::lcd::initialize();
 	print_type();
 	print_intake();
+	catplush();
 
-	pros::lcd::register_btn1_cb(on_center_button);
+	// pros::lcd::register_btn1_cb(on_center_button);
 }
 
 /**
@@ -111,7 +113,9 @@ void disabled() {}
  * This task will exit when the robot is enabled and autonomous or opcontrol
  * starts.
  */
-void competition_initialize() {}
+void competition_initialize() {
+
+}
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -188,4 +192,3 @@ void opcontrol() {
 	}
 
 }
-

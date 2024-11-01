@@ -1,6 +1,6 @@
 #include "main.h"
 #include "ports.h"
-#include "lvgl.h"
+#include "display.h"
 
 pros::Controller controller(CONTROLLER_MASTER);
 
@@ -11,18 +11,22 @@ enum class DriveType
 	Curvature = 2
 };
 
-const std::string names[] = {
-	"Tank Drive", "Arcade", "Curvature"
-};
-
 static DriveType driveType = DriveType::Curvature;
 static bool intakeActive = false;
 static bool intakeToggle = false;
 
 static bool pistonActive = true;
 
+const std::string names[] = {
+	"Tank Drive", "Arcade", "Curvature"
+};
+
 void print_type() {
-		pros::lcd::set_text(1, "Control Type: " + names[static_cast<int>(driveType)]);
+	set_control_text(names[static_cast<int>(driveType)]);
+}
+
+void print_intake() {
+	set_intake_text(intakeActive, intakeToggle);
 }
 
 void cycle_drive_type() {
@@ -38,15 +42,6 @@ void cycle_drive_type() {
 			break;
 	}
 	print_type();
-}
-
-std::string onoff(bool b) {
-	return b ? "On" : "Off";
-}
-
-void print_intake() {
-	// pros::lcd::set_text(2, "Intake Toggle: " + onoff(intakeToggle));
-	// pros::lcd::set_text(3, "Intake Active: " + onoff(intakeActive));
 }
 
 void updateIntake() {
@@ -90,9 +85,11 @@ void on_center_button() {
  */
 void initialize() {
 	// pros::lcd::initialize();
+	pros::delay(50); // lvgl racecondition?
+	display_init();
+
 	print_type();
 	print_intake();
-	catplush();
 
 	// pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -169,6 +166,7 @@ void opcontrol() {
 		if (controller.get_digital_new_press(DIGITAL_A)) {
 			pistonActive = !pistonActive;
 			piston.set_value(pistonActive ? 1 : 0);
+			add_piston_usage();
 		}
 
 		if (controller.get_digital_new_press(DIGITAL_B)) {
@@ -186,9 +184,10 @@ void opcontrol() {
 			updateIntake();
 		}
 
+		display_tick();
 		// delay to save resources
 		pros::delay(25);
-
+	
 	}
 
 }

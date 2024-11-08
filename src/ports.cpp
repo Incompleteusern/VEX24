@@ -8,10 +8,13 @@
 
 pros::adi::DigitalOut piston (ANALOG_SENSOR_PORT);
 
+
 pros::MotorGroup left_motors({1, -2, -3}, pros::MotorGearset::blue); 
 pros::MotorGroup right_motors({-10, 9, 8}, pros::MotorGearset::blue); 
 
 pros::Motor intake(-7, pros::MotorGearset::blue);
+
+std::vector<pros::AbstractMotor*> motors = {&left_motors, &right_motors, &intake};
 
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group

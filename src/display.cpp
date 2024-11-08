@@ -57,24 +57,32 @@ static lv_color_t darken(const lv_color_filter_dsc_t * dsc, lv_color_t color, lv
     return lv_color_darken(color, opa);
 }
 
+/*
 static void event_cb(lv_event_t * e)
 {
     LV_LOG_USER("Clicked");
 
     cycle_drive_type();
 }
+*/
 
 // static lv_obj_t * labels[5];
 // static bool labels_init = false;
 
-static lv_obj_t * controlType;
+// static lv_obj_t * controlType;
 static lv_obj_t * intakeToggle;
 static lv_obj_t * intakeActive;
 static lv_obj_t * pistonUses;
+static lv_obj_t * motorMaxTemp;
+static lv_obj_t * motorOverTemp;
+static lv_obj_t * motorOverCurrent;
 
-static lv_span_t * controlTypeOnOff;
 static lv_span_t * intakeToggleOnOff;
 static lv_span_t * intakeActiveOnOff;
+static lv_span_t * motorMaxTempNum;
+static lv_span_t * motorOverTempBool;
+static lv_span_t * motorOverCurrentBool;
+
 static lv_span_t * pistonUsesCount;
 
 
@@ -101,17 +109,47 @@ void updateSpanOnOff(lv_span_t* span, bool on) {
     }
 }
 
+void updateSpanOnCheck(lv_span_t* span, bool issue) {
+    if (issue) {
+        lv_style_set_text_color(&span->style, lv_color_hex(cat_red));
+        lv_span_set_text(span, "Bad");
+    } else {
+        lv_style_set_text_color(&span->style, lv_color_hex(cat_green));
+        lv_span_set_text(span, "Good");
+    }
+}
+
+void updateSpanTemp(lv_span_t* span, float temp) {
+    float maxTemp = 55;
+    float minTemp = 20;
+    float lerp = std::clamp((temp - maxTemp)/(maxTemp - minTemp), 0.0f, 1.0f);
+
+    lv_style_set_text_color(&span->style, lv_color_hex((int) (cat_red * (1-lerp) + cat_green * lerp)));
+    lv_span_set_text(pistonUsesCount, (std::to_string(++piston_usage) + "C").c_str());
+}
+
+
+/*
 void set_control_text(const std::string text) {
     lv_label_set_text(controlType, text.c_str());
     lv_obj_align(controlType, LV_ALIGN_CENTER, 0, 0);
 }
-
+*/
 
 void set_intake_text(bool on, bool inverse) {
     updateSpanOnOff(intakeActiveOnOff, on);
     updateSpanOnOff(intakeToggleOnOff, inverse);
     lv_obj_align(intakeActive, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_align(intakeToggle, LV_ALIGN_LEFT_MID, 0, 0);
+}
+
+void set_motor_info(bool currentIssue, bool tempIssue, int maxTemp) {
+    updateSpanOnCheck(motorOverCurrentBool, currentIssue);
+    updateSpanOnCheck(motorOverTempBool, tempIssue);
+    updateSpanTemp(motorMaxTempNum, maxTemp);
+    lv_obj_align(motorOverCurrent, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_align(motorOverTemp, LV_ALIGN_LEFT_MID, 0, 0);
+    lv_obj_align(motorMaxTemp, LV_ALIGN_LEFT_MID, 0, 0);
 }
 
 static int piston_usage = 0;
@@ -198,7 +236,7 @@ void add_buttons() {
     lv_obj_set_size(btn, 120, 50);
     lv_obj_add_style(btn, &style_btn, 0);
     lv_obj_add_style(btn, &style_btn_pressed, LV_STATE_PRESSED);
-    lv_obj_add_event_cb(btn, event_cb, LV_EVENT_PRESSED, NULL);
+    //lv_obj_add_event_cb(btn, event_cb, LV_EVENT_PRESSED, NULL);
     
     /*Add a label to the button*/
     lv_obj_t * label = lv_label_create(btn);
@@ -275,30 +313,60 @@ void display_init(void)
 
     // lv_obj_set_flex_align(subconts[1], LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
 
-    lv_obj_t * controlText = lv_label_create(subconts[0]);
-    lv_label_set_text(controlText, "Control Type");
-    lv_obj_align(controlText, LV_FLEX_ALIGN_CENTER, 0, 0);
-    lv_label_set_long_mode(controlText, LV_LABEL_LONG_WRAP);
-
-    lv_obj_t * btn = lv_btn_create(subconts[0]);
-    lv_obj_set_size(btn, 130, 40);
-    /* Remove the styles coming from the theme
-     * Note that size and position are also stored as style properties
-     * so lv_obj_remove_style_all will remove the set size and position too */
-    // lv_obj_remove_style_all(btn);
-    lv_obj_add_style(btn, &style_btn, 0);
-    lv_obj_add_style(btn, &style_btn_pressed, LV_STATE_PRESSED);
-    lv_obj_add_event_cb(btn, event_cb, LV_EVENT_PRESSED, NULL);
-    
-    /*Add a label to the button*/
-    controlType = lv_label_create(btn);
-    lv_label_set_text(controlType, "");
-    lv_obj_center(controlType);
-
     static lv_style_t style_span;
     lv_style_init(&style_span);
     lv_style_set_width(&style_span, 160);
     lv_style_set_height(&style_span, 20);
+
+    lv_obj_t * motorInfo = lv_label_create(subconts[0]);
+    lv_label_set_text(motorInfo, "Motor Info");
+    lv_obj_align(motorInfo, LV_FLEX_ALIGN_CENTER, 0, 0);
+    lv_label_set_long_mode(motorInfo, LV_LABEL_LONG_WRAP);
+
+    motorOverTemp = lv_spangroup_create(subconts[0]);
+    lv_obj_add_style(motorOverTemp, &style_span, 0);
+    lv_obj_align(motorOverTemp, LV_FLEX_ALIGN_CENTER, 0, 0);
+    lv_label_set_long_mode(motorOverTemp, LV_LABEL_LONG_WRAP);
+    lv_span_t * spanMotorOverTemp = lv_spangroup_new_span(motorOverTemp);
+    lv_span_set_text(spanMotorOverTemp, "Motor Temp: ");
+    motorOverTempBool = lv_spangroup_new_span(motorOverTemp);
+    updateSpanOnCheck(motorOverTempBool, false);
+
+    motorOverCurrent = lv_spangroup_create(subconts[0]);
+    lv_obj_add_style(motorOverCurrent, &style_span, 0);
+    lv_obj_align(motorOverCurrent, LV_FLEX_ALIGN_CENTER, 0, 0);
+    lv_label_set_long_mode(motorOverCurrent, LV_LABEL_LONG_WRAP);
+    lv_span_t * spanMotorOverCurrent = lv_spangroup_new_span(motorOverCurrent);
+    lv_span_set_text(spanMotorOverCurrent, "Motor Current: ");
+    motorOverCurrentBool = lv_spangroup_new_span(motorOverCurrent);
+    updateSpanOnCheck(motorOverCurrentBool, false);
+
+    motorMaxTemp = lv_spangroup_create(subconts[1]);
+    lv_obj_add_style(motorMaxTemp, &style_span, 0);
+    lv_obj_align(motorMaxTemp, LV_FLEX_ALIGN_CENTER, 0, 0);
+    lv_label_set_long_mode(motorMaxTemp, LV_LABEL_LONG_WRAP);
+    lv_span_t * spanMotorMaxTemp = lv_spangroup_new_span(motorMaxTemp);
+    lv_span_set_text(spanMotorMaxTemp, "Max Motor Temp: ");
+    motorMaxTempNum = lv_spangroup_new_span(motorMaxTemp);
+    lv_span_set_text(motorMaxTempNum, "??");
+    lv_style_set_text_color(&motorMaxTempNum->style, lv_color_hex(cat_teal));
+
+    updateSpanTemp(intakeToggleOnOff, false);
+
+    /*
+    lv_obj_t * btn = lv_btn_create(subconts[0]);
+    lv_obj_set_size(btn, 130, 40);
+    lv_obj_add_style(btn, &style_btn, 0);
+    lv_obj_add_style(btn, &style_btn_pressed, LV_STATE_PRESSED);
+    lv_obj_add_event_cb(btn, event_cb, LV_EVENT_PRESSED, NULL);
+    */
+
+    /*Add a label to the button*/
+    /*
+    controlType = lv_label_create(btn);
+    lv_label_set_text(controlType, "");
+    lv_obj_center(controlType);
+    */
 
     intakeActive = lv_spangroup_create(subconts[1]);
     lv_obj_add_style(intakeActive, &style_span, 0);
@@ -317,6 +385,8 @@ void display_init(void)
     lv_span_set_text(spanIntakeToggle, "Intake Toggle: ");
     intakeToggleOnOff = lv_spangroup_new_span(intakeToggle);
     updateSpanOnOff(intakeToggleOnOff, false);
+
+    // color lerping lol
 
     pistonUses = lv_spangroup_create(subconts[1]);
     lv_obj_add_style(pistonUses, &style_span, 0);

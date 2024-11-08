@@ -1068,7 +1068,7 @@ class MotorGroup : public virtual AbstractMotor {
 	 */
 	double get_temperature(const std::uint8_t index = 0) const;
 	/**
-	 * Gets the temperature of each motor  in the motor group in degrees Celsius.
+	 * Gets the temperature of each motor in the motor group in degrees Celsius.
 	 *
 	 * This function uses the following values of errno when an error state is
 	 * reached:

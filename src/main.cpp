@@ -11,22 +11,19 @@ enum class DriveType
 	Curvature = 2
 };
 
-static DriveType driveType = DriveType::Curvature;
+static DriveType driveType = DriveType::Tank;
+
 static bool intakeActive = false;
-static bool intakeToggle = false;
 
 static bool pistonActive = true;
 
+/*
 const std::string names[] = {
 	"Tank Drive", "Arcade", "Curvature"
 };
 
 void print_type() {
 	set_control_text(names[static_cast<int>(driveType)]);
-}
-
-void print_intake() {
-	set_intake_text(intakeActive, intakeToggle);
 }
 
 void cycle_drive_type() {
@@ -43,18 +40,78 @@ void cycle_drive_type() {
 	}
 	print_type();
 }
+*/
 
-void updateIntake() {
-	if (!intakeActive) {
+void updateIntake(bool active, bool toggle) {
+	if (!active) {
 		intake.move(0);
 	} else {
-		int sign = intakeToggle ? -1 : 1;
+		int sign = toggle ? -1 : 1;
 		intake.move(sign * 127);
 	}
 
-	print_intake();
+	intakeActive = active;
+
+	set_intake_text(active, toggle);
 }
 
+bool currentCheck(MotorGroup* motorgroup) {
+	for (int motorCurrentOver : motorgroup->is_over_current_all()) {
+		if (motorCurrentOver >= 1) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
+
+// probably a terrible hack
+
+void addAvgTemp(MotorGroup* motorgroup) {
+
+}
+
+
+
+void poll_motor_info() {
+
+
+	bool currentIssue = false;
+	bool tempIssue = false; 
+
+	int maxTemp = 0;
+	
+	for (AbstractMotor* motorgroup : motors) {
+		if (!currentIssue) {
+			for (int motorCurrentOver : motorgroup->is_over_current_all()) {
+				if (motorCurrentOver == 1) {
+					currentIssue = true;
+					break;
+				}
+			}
+		}
+
+		if (!tempIssue) {
+			for (int motorTempOver : motorgroup->is_over_temp_all()) {
+				if (motorTempOver >= 1) {
+					tempIssue = true;
+					break;
+				}
+			}
+		}
+
+		for (int motorTemp : motorgroup->get_temperature_all()) {
+			if (motorTemp == PROS_ERR_F) {
+				continue;
+			} else if (motorTemp > maxTemp) {
+				maxTemp = motorTemp;
+			}
+		}
+	}	
+
+	set_motor_info(currentIssue, tempIssue, maxTemp);	
+}
 
 double logDrive(double v, double pow = 2) {
     if (v > 0)
@@ -88,8 +145,8 @@ void initialize() {
 	pros::delay(50); // lvgl racecondition?
 	display_init();
 
-	print_type();
-	print_intake();
+	// print_type();
+	set_intake_text(false, false);
 
 	// pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -141,7 +198,10 @@ void autonomous() {}
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	int tick = 0;
 	while (true) {
+		tick++;
+
 		if (driveType == DriveType::Tank) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
 			int rightY = controller.get_analog(ANALOG_RIGHT_Y);
@@ -169,22 +229,25 @@ void opcontrol() {
 			add_piston_usage();
 		}
 
+		/*
 		if (controller.get_digital_new_press(DIGITAL_B)) {
 			cycle_drive_type();
 		}
+		*/
 
-		if (controller.get_digital_new_press(DIGITAL_L1)) {
-			intakeActive = !intakeActive;
-			if (!intakeActive) {
-				intakeToggle = false;
-			}
-			updateIntake();
-		} else if (controller.get_digital_new_press(DIGITAL_L2)) {
-			intakeToggle = !intakeToggle;
-			updateIntake();
+		if (controller.get_digital(DIGITAL_R1)) {
+			updateIntake(true, false);
+		} else if (controller.get_digital(DIGITAL_R2)) {
+			updateIntake(true, true);
+		} else if (intakeActive) {
+			updateIntake(false, false);
 		}
 
+		if (tick % 4 == 0) {
+			poll_motor_info();
+		}
 		display_tick();
+
 		// delay to save resources
 		pros::delay(25);
 	

@@ -125,7 +125,7 @@ void updateSpanTemp(lv_span_t* span, float temp) {
     float lerp = std::clamp((temp - maxTemp)/(maxTemp - minTemp), 0.0f, 1.0f);
 
     lv_style_set_text_color(&span->style, lv_color_hex((int) (cat_red * (1-lerp) + cat_green * lerp)));
-    lv_span_set_text(motorMaxTempNum, (std::to_string(temp) + "C").c_str());
+    lv_span_set_text(span, (std::to_string(temp) + "C").c_str());
 }
 
 

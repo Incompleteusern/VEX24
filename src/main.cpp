@@ -17,6 +17,7 @@ static bool intakeActive = false;
 
 static bool pistonActive = true;
 
+
 /*
 const std::string names[] = {
 	"Tank Drive", "Arcade", "Curvature"
@@ -80,7 +81,7 @@ void poll_motor_info() {
 	bool currentIssue = false;
 	bool tempIssue = false; 
 
-	int maxTemp = 0;
+	double maxTemp = -1;
 	
 	for (AbstractMotor* motorgroup : motors) {
 		if (!currentIssue) {
@@ -94,14 +95,14 @@ void poll_motor_info() {
 
 		if (!tempIssue) {
 			for (int motorTempOver : motorgroup->is_over_temp_all()) {
-				if (motorTempOver >= 1) {
+				if (motorTempOver == 1) {
 					tempIssue = true;
 					break;
 				}
 			}
 		}
 
-		for (int motorTemp : motorgroup->get_temperature_all()) {
+		for (double motorTemp : motorgroup->get_temperature_all()) {
 			if (motorTemp == PROS_ERR_F) {
 				continue;
 			} else if (motorTemp > maxTemp) {
@@ -199,6 +200,7 @@ void autonomous() {}
  */
 void opcontrol() {
 	int tick = 0;
+
 	while (true) {
 		tick++;
 

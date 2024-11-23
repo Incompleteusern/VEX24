@@ -8,11 +8,10 @@
 
 pros::adi::DigitalOut piston (ANALOG_SENSOR_PORT);
 
+pros::MotorGroup left_motors({-11, -12, 13}, pros::MotorGearset::blue); 
+pros::MotorGroup right_motors({-17, 18, 19}, pros::MotorGearset::blue); 
 
-pros::MotorGroup left_motors({1, -2, -3}, pros::MotorGearset::blue); 
-pros::MotorGroup right_motors({-10, 9, 8}, pros::MotorGearset::blue); 
-
-pros::Motor intake(-7, pros::MotorGearset::blue);
+pros::Motor intake(-20, pros::MotorGearset::blue);
 
 std::vector<pros::AbstractMotor*> motors = {&left_motors, &right_motors, &intake};
 

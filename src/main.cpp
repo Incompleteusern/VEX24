@@ -104,7 +104,7 @@ void poll_motor_info() {
 
 		for (double motorTemp : motorgroup->get_temperature_all()) {
 			if (motorTemp == PROS_ERR_F) {
-				continue;
+				continue;;
 			} else if (motorTemp > maxTemp) {
 				maxTemp = motorTemp;
 			}
@@ -203,6 +203,9 @@ void opcontrol() {
 
 	while (true) {
 		tick++;
+
+
+	
 
 		if (driveType == DriveType::Tank) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);

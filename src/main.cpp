@@ -65,53 +65,28 @@ bool currentCheck(MotorGroup* motorgroup) {
 	return false;
 }
 
-
-
-// probably a terrible hack
-
-void addAvgTemp(MotorGroup* motorgroup) {
-
-}
-
-
-
 void poll_motor_info() {
-
-
 	bool currentIssue = false;
 	bool tempIssue = false; 
+	bool connectionIssue = false;
 
 	double maxTemp = -1;
 	
-	for (AbstractMotor* motorgroup : motors) {
-		if (!currentIssue) {
-			for (int motorCurrentOver : motorgroup->is_over_current_all()) {
-				if (motorCurrentOver == 1) {
-					currentIssue = true;
-					break;
-				}
-			}
-		}
+	for (Motor motor : motors) {
+		currentIssue |= (motor.is_over_current() == 1);
+		tempIssue |= (motor.is_over_temp() == 1);
+		connectionIssue |= !motor.is_installed();
 
-		if (!tempIssue) {
-			for (int motorTempOver : motorgroup->is_over_temp_all()) {
-				if (motorTempOver == 1) {
-					tempIssue = true;
-					break;
-				}
-			}
-		}
+		double motorTemp = motor.get_temperature();
 
-		for (double motorTemp : motorgroup->get_temperature_all()) {
-			if (motorTemp == PROS_ERR_F) {
-				continue;;
-			} else if (motorTemp > maxTemp) {
-				maxTemp = motorTemp;
-			}
+		if (motorTemp == PROS_ERR_F) {
+			continue;
+		} else if (motorTemp > maxTemp) {
+			maxTemp = motorTemp;
 		}
 	}	
 
-	set_motor_info(currentIssue, tempIssue, maxTemp);	
+	set_motor_info(currentIssue, tempIssue, maxTemp, connectionIssue);	
 }
 
 double logDrive(double v, double pow = 2) {
@@ -201,11 +176,17 @@ void autonomous() {}
 void opcontrol() {
 	int tick = 0;
 
+	pros::Task render_task{ [] {
+        while (pros::Task::notify_take(true, TIMEOUT_MAX)) {
+            poll_motor_info();
+        }
+	display_tick();
+    } };
+
+
+
 	while (true) {
 		tick++;
-
-
-	
 
 		if (driveType == DriveType::Tank) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
@@ -248,14 +229,20 @@ void opcontrol() {
 			updateIntake(false, false);
 		}
 
-		if (tick % 4 == 0) {
-			poll_motor_info();
+		if (controller.get_digital(DIGITAL_L1)) {
+			ladybrown.move(127);
+		} else if (controller.get_digital(DIGITAL_L2)) {
+			ladybrown.move(-127);
+		} else {
+			ladybrown.move(0);
 		}
-		display_tick();
+
+		if (tick % 4 == 0) {
+			render_task.notify();
+		}
 
 		// delay to save resources
 		pros::delay(25);
 	
 	}
-
 }

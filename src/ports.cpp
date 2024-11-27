@@ -6,14 +6,36 @@
 #define wheel_type lemlib::Omniwheel::NEW_275
 #define ANALOG_SENSOR_PORT 'A'
 
+#define FIRST_LEFT_MOTOR_PORT -11
+#define SECOND_LEFT_MOTOR_PORT -12
+#define THIRD_LEFT_MOTOR_PORT 13
+
+#define FIRST_RIGHT_MOTOR_PORT -17
+#define SECOND_RIGHT_MOTOR_PORT 18
+#define THIRD_RIGHT_MOTOR_PORT 19
+
+#define INTAKE_PORT -20
+#define LADY_BROWN_PORT 2
+
+
+
 pros::adi::DigitalOut piston (ANALOG_SENSOR_PORT);
 
-pros::MotorGroup left_motors({-11, -12, 13}, pros::MotorGearset::blue); 
-pros::MotorGroup right_motors({-17, 18, 19}, pros::MotorGearset::blue); 
+pros::Motor m1(FIRST_LEFT_MOTOR_PORT, pros::MotorGearset::blue);
+pros::Motor m2(SECOND_LEFT_MOTOR_PORT, pros::MotorGearset::blue);
+pros::Motor m3(THIRD_LEFT_MOTOR_PORT, pros::MotorGearset::blue);
+pros::Motor m4(FIRST_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
+pros::Motor m5(SECOND_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
+pros::Motor m6(THIRD_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 
-pros::Motor intake(-20, pros::MotorGearset::blue);
 
-std::vector<pros::AbstractMotor*> motors = {&left_motors, &right_motors, &intake};
+pros::MotorGroup left_motors({FIRST_LEFT_MOTOR_PORT, SECOND_LEFT_MOTOR_PORT, THIRD_LEFT_MOTOR_PORT}, pros::MotorGearset::blue); 
+pros::MotorGroup right_motors({FIRST_RIGHT_MOTOR_PORT, SECOND_RIGHT_MOTOR_PORT, THIRD_RIGHT_MOTOR_PORT}, pros::MotorGearset::blue); 
+
+pros::Motor intake(INTAKE_PORT, pros::MotorGearset::blue);
+pros::Motor ladybrown(LADY_BROWN_PORT, pros::MotorGearset::green);
+
+std::vector<pros::Motor> motors = {m1, m2, m3, m4, m5, m6, intake, ladybrown};
 
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group

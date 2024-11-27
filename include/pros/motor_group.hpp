@@ -1759,7 +1759,7 @@ class MotorGroup : public virtual AbstractMotor {
 	 * mg.set_current_limit(1000);
 	 * while (true) {
 	 *   mg = controller_get_analog(E_CONTROLLER_ANALOG_LEFT_Y);
-	 *   // The motor will reduce its output at 1000 mA instead of the default 2500 mA
+	 *   // The motor will reduce its output at 1000 mA `ead of the default 2500 mA
 	 *   pros::delay(2);
 	 *   }
 	 * }

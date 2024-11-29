@@ -11,7 +11,7 @@
 #define cat_rosewater 0xf5e0dc
 #define cat_flamingo 0xf2cdcd
 #define cat_pink 0xf5c2e7
-#define cat_mauve 0xf2cdcd
+#define cat_mauve 0xcba6f7
 #define cat_red 0xf38ba8
 #define cat_maroon 0xeba0ac
 #define cat_peach 0xfab387
@@ -52,6 +52,7 @@ static lv_style_t style_mantle;
 static lv_style_t style_crust;
 
 
+
 static lv_color_t darken(const lv_color_filter_dsc_t * dsc, lv_color_t color, lv_opa_t opa)
 {
     LV_UNUSED(dsc);
@@ -79,8 +80,9 @@ struct span_label {
 };
 
 
-static span_label intakeToggle;
-static span_label intakeActive;
+static span_label poseY;
+static span_label poseX;
+static span_label poseTheta;
 static span_label pistonUses;
 static span_label motorMaxTemp;
 static span_label motorOverTemp;
@@ -111,6 +113,10 @@ void updateSpanOnOff(lv_span_t* span, bool on) {
     }
 }
 
+void updateSpanFloat(lv_span_t* span, float num) {
+    lv_span_set_text(span, std::to_string(num).c_str());
+}
+
 void updateSpanOnCheck(lv_span_t* span, bool issue) {
     if (issue) {
         lv_style_set_text_color(&span->style, lv_color_hex(cat_red));
@@ -127,8 +133,8 @@ void updateSpanTemp(lv_span_t* span, double temp) {
         lv_span_set_text(motorMaxTemp.spanvalue, "???");
         return;
     }
-    float maxTemp = 55;
-    float minTemp = 30;
+    float maxTemp = 85;
+    float minTemp = 0;
     float lerp = std::clamp((temp - minTemp)/(maxTemp - minTemp), 0.0, 1.0);
 
     lv_style_set_text_color(&span->style, lv_color_hex((int) (cat_green * (1-lerp) + cat_red * lerp)));
@@ -143,11 +149,10 @@ void set_control_text(const std::string text) {
 }
 */
 
-void set_intake_text(bool on, bool inverse) {
-    updateSpanOnOff(intakeActive.spanvalue, on);
-    updateSpanOnOff(intakeToggle.spanvalue, inverse);
-    lv_obj_align(intakeActive.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
-    lv_obj_align(intakeToggle.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
+void set_imu_info(float x, float y, float theta) {
+    updateSpanFloat(poseX.spanvalue, x);
+    updateSpanFloat(poseY.spanvalue, y);
+    updateSpanFloat(poseTheta.spanvalue, theta);
 }
 
 void set_motor_info(bool currentIssue, bool tempIssue, double maxTemp, bool connectionIssue) {
@@ -184,8 +189,6 @@ lv_style_t style_bg_color(uint32_t hex) {
     return style;
 }
 
-
-
 /*
 static void style_init(void)
 {
@@ -214,7 +217,6 @@ static void style_init(void)
 }
 */
 
-
 void init_styles() {
     style_base = style_bg_color(cat_base);
     style_crust = style_bg_color(cat_crust);
@@ -231,6 +233,7 @@ void init_styles() {
     lv_style_set_border_color(&style_btn, lv_color_hex(cat_lavender)); // lavender
     lv_style_set_text_color(&style_btn, lv_color_hex(cat_text)); // text
     lv_style_set_bg_color(&style_btn, lv_color_hex(cat_surface0));
+    lv_style_set_border_width(&style_btn, 2); // lavender
 
     lv_style_init(&style_span);
     lv_style_set_width(&style_span, 160);
@@ -305,18 +308,75 @@ void info_display(lv_obj_t* parent) {
     lv_style_set_text_color(&motorMaxTemp.spanvalue->style, lv_color_hex(cat_teal));
     updateSpanTemp(motorMaxTemp.spanvalue, false);
 
-    intakeActive = create_span_label("Intake Active: ", subconts[1]);
-    updateSpanOnOff(intakeActive.spanvalue, false);
+    poseX = create_span_label("Pose X: ", subconts[1]);
+    updateSpanFloat(poseX.spanvalue, 0);
 
-    intakeToggle = create_span_label("Intake Toggle: ", subconts[1]);
-    updateSpanOnOff(intakeToggle.spanvalue, false);
+    poseY = create_span_label("Pose Y: ", subconts[1]);
+    updateSpanFloat(poseY.spanvalue, 0);
+
+    poseTheta = create_span_label("Pose Theta: ", subconts[1]);
+    updateSpanFloat(poseTheta.spanvalue, 0);
 
     pistonUses = create_span_label("Piston Uses: ", subconts[1]);
     lv_span_set_text(pistonUses.spanvalue, "0");
     lv_style_set_text_color(&pistonUses.spanvalue->style, lv_color_hex(cat_teal));
 }
 
-void draw_catplush(lv_obj_t* parent) {
+
+static void auton_event_handler(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * obj = lv_event_get_target(e);
+    if(code == LV_EVENT_VALUE_CHANGED) {
+        uint32_t id = lv_btnmatrix_get_selected_btn(obj);
+        set_active_auton(id+1);
+    }
+}
+
+static void run_auton_event_handler(lv_event_t * e) {
+    lv_event_code_t code = lv_event_get_code(e);
+    if(code == LV_EVENT_PRESSED) {
+        run_active_auton();
+    }
+}
+
+void auton_display(lv_obj_t* parent) {
+    static const char * btnm_map[] = {"Auton 1", "Auton 2", "Auton 3", "Auton 4", NULL};
+
+    lv_obj_t* matrix = lv_btnmatrix_create(parent);
+    lv_btnmatrix_set_map(matrix, btnm_map);
+    lv_obj_set_size(matrix, 350, 150);
+    lv_btnmatrix_set_one_checked(matrix, true);
+    lv_btnmatrix_set_btn_ctrl_all(matrix, LV_BTNMATRIX_CTRL_CHECKABLE);
+
+    lv_obj_align(matrix, LV_ALIGN_CENTER, -50, 0);
+    lv_obj_add_event_cb(matrix, auton_event_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_style(matrix, &style_btn, LV_PART_MAIN);
+    lv_obj_add_style(matrix, &style_btn, LV_PART_ITEMS);
+    lv_obj_set_style_border_color(matrix, lv_color_hex(cat_lavender), LV_PART_ITEMS); // lavender
+    lv_obj_set_style_bg_color(matrix, lv_color_hex(cat_surface1), LV_PART_ITEMS);
+    lv_obj_set_style_border_width(matrix, 2, LV_PART_ITEMS);
+
+    lv_obj_set_style_bg_color(matrix, lv_color_hex(cat_surface2), LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_border_color(matrix, lv_color_hex(cat_pink), LV_PART_ITEMS | LV_STATE_CHECKED); // lavender
+
+    lv_obj_t* testAuton = lv_btn_create(parent);
+    lv_obj_add_style(testAuton, &style_btn, 0);
+    lv_obj_set_size(testAuton, 80, 100);
+    lv_obj_align(testAuton, LV_ALIGN_CENTER, 180, 0);
+    lv_obj_set_style_border_color(testAuton, lv_color_hex(cat_red), 0);
+
+    lv_obj_t* label = lv_label_create(testAuton);
+    lv_label_set_text(label, "Run Auton");
+    lv_obj_set_style_text_align(label, LV_TEXT_ALIGN_CENTER, 0);
+    lv_obj_set_width(label, 60);
+    lv_obj_center(label);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_WRAP);
+    lv_obj_add_event_cb(testAuton, run_auton_event_handler, LV_EVENT_ALL, NULL);
+
+}
+
+void fun_display(lv_obj_t* parent) {
     catplush_img = lv_img_create(parent);
     lv_img_set_src(catplush_img, &catplush);
     lv_obj_align(catplush_img, LV_ALIGN_CENTER, 0, 0);
@@ -342,11 +402,19 @@ void display_init(void)
     init_styles();
 
     lv_obj_t *tabview = lv_tabview_create(lv_scr_act(), LV_DIR_TOP, 30);
+    lv_obj_t *tab_btns = lv_tabview_get_tab_btns(tabview);
+    lv_obj_set_style_bg_color(tab_btns, lv_color_hex(0.5*cat_base+0.5*cat_mauve), LV_PART_ITEMS);
+    lv_obj_set_style_bg_color(tab_btns, lv_color_hex(cat_mantle), LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(tab_btns, lv_color_hex(cat_text), LV_PART_ITEMS);
+    lv_obj_set_style_text_color(tab_btns, lv_color_hex(cat_text), LV_PART_ITEMS | LV_STATE_CHECKED);
+    lv_obj_set_style_border_color(tab_btns, lv_color_hex(cat_mauve), LV_PART_ITEMS | LV_STATE_CHECKED);
 
     lv_obj_t* tab_info = lv_tabview_add_tab(tabview, "Info");
-    lv_obj_t* tab_image = lv_tabview_add_tab(tabview, "Fun");
     lv_obj_t* tab_auton = lv_tabview_add_tab(tabview, "Auton");
 
-    draw_catplush(tab_image);
+    lv_obj_t* tab_image = lv_tabview_add_tab(tabview, "Fun");
+
+    fun_display(tab_image);
+    auton_display(tab_auton);
     info_display(tab_info);
 }

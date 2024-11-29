@@ -17,6 +17,33 @@ static bool intakeActive = false;
 
 static bool pistonActive = true;
 
+static int activeAuton = 0;
+
+void set_active_auton(int id) {
+	activeAuton = id;
+}
+
+void run_active_auton() {
+	chassis.cancelAllMotions();
+	switch (activeAuton) {
+		case 0:
+			break;
+		case 1:
+			chassis.moveToPoint(0, 20, 4000000);
+			break;
+		case 2:
+			// chassis.moveToPoint(0, 1, 4000);
+			break;
+		case 3:
+			chassis.turnToHeading(270, 400000000);
+			break;
+		case 4:
+			// chassis.turnToHeading(90, 4000);
+			break;
+	}
+}
+
+
 
 /*
 const std::string names[] = {
@@ -53,7 +80,6 @@ void updateIntake(bool active, bool toggle) {
 
 	intakeActive = active;
 
-	set_intake_text(active, toggle);
 }
 
 bool currentCheck(MotorGroup* motorgroup) {
@@ -120,9 +146,8 @@ void initialize() {
 	// pros::lcd::initialize();
 	pros::delay(50); // lvgl racecondition?
 	display_init();
-
+	chassis.calibrate();
 	// print_type();
-	set_intake_text(false, false);
 
 	// pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -179,11 +204,11 @@ void opcontrol() {
 	pros::Task render_task{ [] {
         while (pros::Task::notify_take(true, TIMEOUT_MAX)) {
             poll_motor_info();
+			display_tick();
+			lemlib::Pose pose = chassis.getPose();
+			set_imu_info(pose.x, pose.y, pose.theta);
         }
-	display_tick();
     } };
-
-
 
 	while (true) {
 		tick++;

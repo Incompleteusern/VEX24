@@ -90,6 +90,11 @@ bool currentCheck(MotorGroup* motorgroup) {
 	return false;
 }
 
+static bool prevCurrentIssue = false;
+static bool prevTempIssue = false;
+static bool prevConnectionIssue = false;
+
+
 void poll_motor_info() {
 	bool currentIssue = false;
 	bool tempIssue = false; 
@@ -100,7 +105,7 @@ void poll_motor_info() {
 	for (Motor motor : motors) {
 		currentIssue |= (motor.is_over_current() == 1);
 		tempIssue |= (motor.is_over_temp() == 1);
-		connectionIssue |= !motor.is_installed();
+		connectionIssue |= (motor.get_plugged_type() == DeviceType::none);
 
 		double motorTemp = motor.get_temperature();
 
@@ -109,7 +114,20 @@ void poll_motor_info() {
 		} else if (motorTemp > maxTemp) {
 			maxTemp = motorTemp;
 		}
-	}	
+	}
+
+	
+	if (!prevCurrentIssue && currentIssue) {
+	    controller.rumble(".-.-.-");
+	} else if (!prevTempIssue && tempIssue) {
+	    controller.rumble(".-.-");
+	} else if (!prevConnectionIssue && connectionIssue) {
+	    controller.rumble(".-");
+	}
+	
+	prevCurrentIssue = currentIssue;
+	prevTempIssue = tempIssue;
+	prevConnectionIssue = connectionIssue;
 
 	set_motor_info(currentIssue, tempIssue, maxTemp, connectionIssue);	
 }
@@ -139,19 +157,6 @@ void initialize() {
 	display_init();
 	chassis.calibrate();
 	// print_type();
-
-	pros::Task render_task{ [] {
-        while (true) {
-            poll_motor_info();
-			display_tick();
-			lemlib::Pose pose = chassis.getPose();
-			set_imu_info(pose.x, pose.y, pose.theta);
-			set_lady_info(ladybrownReady, ladybrownTakeIntake, ladybrown_exit.getExit() ? 34 : 23);
-			pros::c::task_delay(100);
-        }
-    } };
-
-	ladybrown.set_brake_mode(E_MOTOR_BRAKE_COAST);
 
 	// pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -206,6 +211,7 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+	
 	int tick = 0;
 
 	while (true) {

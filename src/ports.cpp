@@ -44,7 +44,7 @@ pros::MotorGroup right_motors({FIRST_RIGHT_MOTOR_PORT, SECOND_RIGHT_MOTOR_PORT, 
 pros::Motor intake(INTAKE_PORT, pros::MotorGearset::blue);
 pros::Motor ladybrown(LADY_BROWN_PORT, pros::MotorGearset::green);
 
-std::vector<pros::Motor> motors = {m1, m2, m3, m4, m5, m6, intake, ladybrown};
+std::vector<pros::Motor> motors = {m1, m2, m3, m4, m5, m6, intake}; //, ladybrown};
 
 lemlib::Drivetrain drivetrain(&left_motors, // left motor group
                               &right_motors, // right motor group

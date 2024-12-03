@@ -1,6 +1,8 @@
 #include "main.h"
 #include "ports.h"
 #include "display.h"
+#include "pros/rtos.h"
+#include "auton.h"
 
 pros::Controller controller(CONTROLLER_MASTER);
 
@@ -16,34 +18,6 @@ static DriveType driveType = DriveType::Tank;
 static bool intakeActive = false;
 
 static bool pistonActive = true;
-
-static int activeAuton = 0;
-
-void set_active_auton(int id) {
-	activeAuton = id;
-}
-
-void run_active_auton() {
-	chassis.cancelAllMotions();
-	switch (activeAuton) {
-		case 0:
-			break;
-		case 1:
-			chassis.moveToPoint(0, 20, 4000000);
-			break;
-		case 2:
-			// chassis.moveToPoint(0, 1, 4000);
-			break;
-		case 3:
-			chassis.turnToHeading(270, 400000000);
-			break;
-		case 4:
-			// chassis.turnToHeading(90, 4000);
-			break;
-	}
-}
-
-
 
 /*
 const std::string names[] = {
@@ -149,6 +123,26 @@ void initialize() {
 	chassis.calibrate();
 	// print_type();
 
+	pros::Task render_task{ [] {
+        while (true) {
+            poll_motor_info();
+			display_tick();
+			lemlib::Pose pose = chassis.getPose();
+			set_imu_info(pose.x, pose.y, pose.theta);
+			task_delay(100);
+        }
+    } };
+
+	while (true) {
+		if (do_auton_hack) {
+			do_auton_hack = false;
+			run_active_auton();
+		} else if (set_auton_id_hack) {
+			set_active_auton(set_auton_id_hack);
+		}
+		pros::delay(25);
+	}
+
 	// pros::lcd::register_btn1_cb(on_center_button);
 }
 
@@ -183,7 +177,9 @@ void competition_initialize() {
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+	run_active_auton();
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -200,15 +196,6 @@ void autonomous() {}
  */
 void opcontrol() {
 	int tick = 0;
-
-	pros::Task render_task{ [] {
-        while (pros::Task::notify_take(true, TIMEOUT_MAX)) {
-            poll_motor_info();
-			display_tick();
-			lemlib::Pose pose = chassis.getPose();
-			set_imu_info(pose.x, pose.y, pose.theta);
-        }
-    } };
 
 	while (true) {
 		tick++;
@@ -262,12 +249,7 @@ void opcontrol() {
 			ladybrown.move(0);
 		}
 
-		if (tick % 4 == 0) {
-			render_task.notify();
-		}
-
 		// delay to save resources
 		pros::delay(25);
-	
 	}
 }

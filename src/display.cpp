@@ -6,6 +6,7 @@
 #include "_main.h"
 #include "pros/apix.h"
 #include "liblvgl/lvgl.h"
+#include "auton.h"
 
 // From catpuccin
 #define cat_rosewater 0xf5e0dc
@@ -39,6 +40,9 @@
 LV_IMG_DECLARE(catplush);
 
 static lv_obj_t * catplush_img;
+
+extern bool do_auton_hack = true;
+extern int set_auton_id = 1;
 
 static lv_style_t style_btn_pressed;
 static lv_style_t style_btn_red;
@@ -244,7 +248,7 @@ void init_styles() {
 
 }
 
-span_label create_span_label(const char *text, lv_obj_t* parent) {
+static span_label create_span_label(const char *text, lv_obj_t* parent) {
     span_label label;
     label.spangroup = lv_spangroup_create(parent);
     lv_obj_add_style(label.spangroup, &style_span, 0);
@@ -257,7 +261,7 @@ span_label create_span_label(const char *text, lv_obj_t* parent) {
     return label;
 }
 
-void info_display(lv_obj_t* parent) {
+static void info_display(lv_obj_t* parent) {
     int h = 180;
     int d = 25;
 
@@ -322,25 +326,26 @@ void info_display(lv_obj_t* parent) {
     lv_style_set_text_color(&pistonUses.spanvalue->style, lv_color_hex(cat_teal));
 }
 
-
 static void auton_event_handler(lv_event_t * e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t * obj = lv_event_get_target(e);
     if(code == LV_EVENT_VALUE_CHANGED) {
         uint32_t id = lv_btnmatrix_get_selected_btn(obj);
-        set_active_auton(id+1);
+        // set_active_auton(id+1);
+        set_auton_id_hack = d+1;
     }
 }
 
 static void run_auton_event_handler(lv_event_t * e) {
     lv_event_code_t code = lv_event_get_code(e);
     if(code == LV_EVENT_PRESSED) {
-        run_active_auton();
+        // run_active_auton();
+        do_auton_hack = true;
     }
 }
 
-void auton_display(lv_obj_t* parent) {
+static void auton_display(lv_obj_t* parent) {
     static const char * btnm_map[] = {"Auton 1", "Auton 2", "Auton 3", "Auton 4", NULL};
 
     lv_obj_t* matrix = lv_btnmatrix_create(parent);
@@ -376,7 +381,7 @@ void auton_display(lv_obj_t* parent) {
 
 }
 
-void fun_display(lv_obj_t* parent) {
+static void fun_display(lv_obj_t* parent) {
     catplush_img = lv_img_create(parent);
     lv_img_set_src(catplush_img, &catplush);
     lv_obj_align(catplush_img, LV_ALIGN_CENTER, 0, 0);
@@ -386,7 +391,6 @@ void fun_display(lv_obj_t* parent) {
     // lv_img_set_src(img2, LV_SYMBOL_OK "Accept");
     // lv_obj_align_to(img2, img1, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
 }
-
 
 static int rotation = 0;
 

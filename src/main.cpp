@@ -19,6 +19,10 @@ static bool intakeActive = false;
 
 static bool pistonActive = true;
 
+static bool ladyBrownActive = true;
+
+static bool ladybrownTake = false;
+
 /*
 const std::string names[] = {
 	"Tank Drive", "Arcade", "Curvature"
@@ -129,10 +133,12 @@ void initialize() {
 			display_tick();
 			lemlib::Pose pose = chassis.getPose();
 			set_imu_info(pose.x, pose.y, pose.theta);
-			task_delay(100);
+			set_lady_info(ladyBrownActive, ladybrownTake, distance.get());
+			pros::c::task_delay(100);
         }
     } };
 
+	/*
 	while (true) {
 		if (do_auton_hack) {
 			do_auton_hack = false;
@@ -142,6 +148,7 @@ void initialize() {
 		}
 		pros::delay(25);
 	}
+	*/
 
 	// pros::lcd::register_btn1_cb(on_center_button);
 }
@@ -181,6 +188,8 @@ void autonomous() {
 	run_active_auton();
 }
 
+#define distance_min 60
+
 /**
  * Runs the operator control code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -197,9 +206,14 @@ void autonomous() {
 void opcontrol() {
 	int tick = 0;
 
-	while (true) {
-		tick++;
+	static int newpos = -1;
 
+	lemlib::PID lady_pid(1, 0, 2, 0);
+
+	while (true) {
+		tick++;		
+
+		
 		if (driveType == DriveType::Tank) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
 			int rightY = controller.get_analog(ANALOG_RIGHT_Y);
@@ -220,12 +234,14 @@ void opcontrol() {
 			// move the robot
 			chassis.curvature(logDrive(leftY), logDrive(rightX));
 		}
+		
 
 		if (controller.get_digital_new_press(DIGITAL_A)) {
 			pistonActive = !pistonActive;
 			piston.set_value(pistonActive ? 1 : 0);
 			add_piston_usage();
 		}
+		
 
 		/*
 		if (controller.get_digital_new_press(DIGITAL_B)) {
@@ -233,20 +249,47 @@ void opcontrol() {
 		}
 		*/
 
-		if (controller.get_digital(DIGITAL_R1)) {
-			updateIntake(true, false);
-		} else if (controller.get_digital(DIGITAL_R2)) {
-			updateIntake(true, true);
-		} else if (intakeActive) {
-			updateIntake(false, false);
+		if (!ladybrownTake || !ladyBrownActive) {
+			if (controller.get_digital(DIGITAL_R1)) {
+				updateIntake(true, false);
+			} else if (controller.get_digital(DIGITAL_R2)) {
+				updateIntake(true, true);
+			} else if (intakeActive) {
+				updateIntake(false, false);
+			}
 		}
 
 		if (controller.get_digital(DIGITAL_L1)) {
-			ladybrown.move(127);
+			ladybrown.move(80);
 		} else if (controller.get_digital(DIGITAL_L2)) {
-			ladybrown.move(-127);
+			ladybrown.move(-80);
 		} else {
 			ladybrown.move(0);
+		}
+
+		if (controller.get_digital_new_press(DIGITAL_Y)) {
+			ladyBrownActive = !ladyBrownActive;
+			if (!ladyBrownActive) {
+				ladybrownTake = false;
+			}
+		}
+
+		if (ladyBrownActive) {
+			if (distance.get() < distance_min && !ladybrownTake) {
+				ladybrownTake = true;
+				intake.move(0);
+				newpos = intake.get_position() + 220;
+			} else if (ladybrownTake) {
+				float error = newpos - intake.get_position();
+				float output = lady_pid.update(error);
+				intake.move(output);
+				if (error < 10) {
+					lady_pid.reset();
+					intake.move(0);
+					ladybrownTake = false;
+					ladyBrownActive = false;
+				}
+			}
 		}
 
 		// delay to save resources

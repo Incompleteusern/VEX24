@@ -42,7 +42,7 @@ LV_IMG_DECLARE(catplush);
 static lv_obj_t * catplush_img;
 
 extern bool do_auton_hack = true;
-extern int set_auton_id = 1;
+extern int set_auton_id_hack = 1;
 
 static lv_style_t style_btn_pressed;
 static lv_style_t style_btn_red;
@@ -93,6 +93,9 @@ static span_label motorOverTemp;
 static span_label motorOverCurrent;
 static span_label motorNotConnected;
 
+static span_label ladybrownOn;
+static span_label ladybrownTaking;
+static span_label distanceSensor;
 
 
 /*
@@ -167,6 +170,12 @@ void set_motor_info(bool currentIssue, bool tempIssue, double maxTemp, bool conn
     lv_obj_align(motorOverCurrent.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_align(motorOverTemp.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
     lv_obj_align(motorMaxTemp.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
+}
+
+void set_lady_info(bool ladybrown, bool ladybrownTake, float distance) {
+    updateSpanOnOff(ladybrownOn.spanvalue, ladybrown);
+    updateSpanOnOff(ladybrownTaking.spanvalue, ladybrownTake);
+    updateSpanFloat(distanceSensor.spanvalue, distance);
 }
 
 static int piston_usage = 0;
@@ -324,6 +333,15 @@ static void info_display(lv_obj_t* parent) {
     pistonUses = create_span_label("Piston Uses: ", subconts[1]);
     lv_span_set_text(pistonUses.spanvalue, "0");
     lv_style_set_text_color(&pistonUses.spanvalue->style, lv_color_hex(cat_teal));
+
+    ladybrownOn = create_span_label("Lady On: ", subconts[1]);
+    updateSpanOnOff(ladybrownOn.spanvalue, false);
+
+    ladybrownTaking = create_span_label("Lady Taking: ", subconts[1]);
+    updateSpanOnOff(ladybrownTaking.spanvalue, false);
+
+    distanceSensor = create_span_label("Distance Sensor: ", subconts[1]);
+    updateSpanFloat(distanceSensor.spanvalue, 0);
 }
 
 static void auton_event_handler(lv_event_t * e)
@@ -333,7 +351,7 @@ static void auton_event_handler(lv_event_t * e)
     if(code == LV_EVENT_VALUE_CHANGED) {
         uint32_t id = lv_btnmatrix_get_selected_btn(obj);
         // set_active_auton(id+1);
-        set_auton_id_hack = d+1;
+        // set_auton_id_hack = d+1;
     }
 }
 

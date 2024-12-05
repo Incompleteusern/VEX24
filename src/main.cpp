@@ -16,54 +16,55 @@ enum class DriveType
 static DriveType driveType = DriveType::Tank;
 
 static bool intakeActive = false;
-
 static bool pistonActive = true;
 
-static bool ladybrownTake = false;
+// ladybrown setup and control
+
+static bool ladybrownReady = false;
+static bool ladybrownTakeIntake = false;
+
+lemlib::PID ladybrown_pid(1, 0, 2, 0);
+lemlib::PID intake_pid(1, 0, 0, 0);
+
+static float intake_goal = 0;
+static float ladybrown_goal = 0;
 
 
 #define distance_min 60
 
-const int ladybrown_values[] = {
+const float ladybrown_values[] = {
 	0, 30, 150
 };
 
-static int ladybrown_goal_pos = 0;
 static bool ladyBrownActive = true;
 
-static 	lemlib::PID lady_pid(1, 0, 2, 0);
+static lemlib::ExitCondition intake_exit(10, 200);
+static lemlib::ExitCondition ladybrown_exit(10, 200);
 
-void set_ladybrown_goal_pos(int id) {
-	ladybrown_goal_pos = ladybrown_values[id];
+static int lady_brown_id = 0;
+
+void set_ladybrown_goal(int id) {
+	lady_brown_id = id;
+	ladybrown_goal = ladybrown_values[id];
 }
 
+bool run_pid(float goal, float current, lemlib::PID pid, pros::Motor motor, lemlib::ExitCondition exit) {
+	float error = goal - current;
+	float output = pid.update(error);
+	motor.move(output);
+	exit.update(error);
 
-
-
-/*
-const std::string names[] = {
-	"Tank Drive", "Arcade", "Curvature"
-};
-
-void print_type() {
-	set_control_text(names[static_cast<int>(driveType)]);
-}
-
-void cycle_drive_type() {
-	switch (driveType) {
-		case DriveType::Tank: 
-			driveType = DriveType::Arcade;
-			break;
-		case DriveType::Arcade:
-			driveType = DriveType::Curvature;
-			break;
-		case DriveType::Curvature:
-			driveType = DriveType::Tank;
-			break;
+	// TODO proper exit conditions
+	if (exit.getExit()) {
+		pid.reset();
+		motor.move(0);
+		return true;
 	}
-	print_type();
+
+	return false;
+
 }
-*/
+
 
 void updateIntake(bool active, bool toggle) {
 	if (!active) {
@@ -142,7 +143,7 @@ void initialize() {
 			display_tick();
 			lemlib::Pose pose = chassis.getPose();
 			set_imu_info(pose.x, pose.y, pose.theta);
-			set_lady_info(ladyBrownActive, ladybrownTake, distance_sensor.get());
+			set_lady_info(ladybrownReady, ladybrownTakeIntake, distance_sensor.get());
 			pros::c::task_delay(100);
         }
     } };
@@ -216,13 +217,9 @@ void autonomous() {
 void opcontrol() {
 	int tick = 0;
 
-	static int newpos = -1;
-
-	lemlib::PID lady_pid(1, 0, 2, 0);
-
 	while (true) {
-		tick++;		
-
+		tick++;
+		// TODO REPLACE with millis
 	
 		if (driveType == DriveType::Tank) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
@@ -251,50 +248,62 @@ void opcontrol() {
 			piston.set_value(pistonActive ? 1 : 0);
 			add_piston_usage();
 		}
-		
 
-		/*
-		if (controller.get_digital_new_press(DIGITAL_B)) {
-			cycle_drive_type();
-		}
-		*/
-
-		if (controller.get_digital(DIGITAL_R1)) {
-			updateIntake(true, false);
-		} else if (controller.get_digital(DIGITAL_R2)) {
-			updateIntake(true, true);
-		} else if (intakeActive) {
-			updateIntake(false, false);
+		if (ladybrownTakeIntake) {
+			bool cancel = run_pid(intake_goal, intake.get_position(), intake_pid, intake, intake_exit);
+			if (cancel) {
+				ladybrownTakeIntake = false;
+				ladybrownReady = false;
+			}
+		} else {
+			if (controller.get_digital(DIGITAL_R1)) {
+				updateIntake(true, false);
+			} else if (controller.get_digital(DIGITAL_R2)) {
+				updateIntake(true, true);
+			} else if (intakeActive) {
+				updateIntake(false, false);
+			}
 		}
 		
 		if (controller.get_digital_new_press(DIGITAL_L1)) {
-			set_ladybrown_goal_pos(2);
+			set_ladybrown_goal(2);
 			ladyBrownActive = true;
 		} else if (controller.get_digital_new_press(DIGITAL_L2)) {
-			set_ladybrown_goal_pos(0);
+			set_ladybrown_goal(0);
 			ladyBrownActive = true;
 		}
 
 		if (ladyBrownActive) {
-			float error = ladybrown_goal_pos - lady_potentiometer_sensor.get_value();
-			float output = lady_pid.update(error);
-			ladybrown.move(output);
-			// TODO proper exit conditions
-			if (error < 10) {
-				lady_pid.reset();
-				intake.move(0);
-				ladybrownTake = false;
+			bool cancel = run_pid(ladybrown_goal, lady_potentiometer_sensor.get_value(), ladybrown_pid, ladybrown, ladybrown_exit);
+			if (cancel) {
 				ladyBrownActive = false;
+				if (lady_brown_id == 1) {
+					ladybrown.brake();
+					TODO LOOK AT
+				}
 			}
-
 		}
+
 
 		if (controller.get_digital_new_press(DIGITAL_Y)) {
-			
+			// move lady brown to starting position
+			ladybrownReady = !ladybrownReady;
+			if (ladybrownReady) {
+				set_ladybrown_goal(1);
+			} else {
+				set_ladybrown_goal(0);
+			}
+			ladyBrownActive = true;
+		}
+
+		if (ladybrownReady) {
+			if (distance_sensor.get() < distance_min && !ladybrownTakeIntake) {
+				ladybrownTakeIntake = true;
+				intake_goal = intake.get_position() + 220;
+			}
 		}
 
 
-		*/
 
 		// delay to save resources
 		pros::delay(25);

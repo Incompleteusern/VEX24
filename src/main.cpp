@@ -19,9 +19,26 @@ static bool intakeActive = false;
 
 static bool pistonActive = true;
 
+static bool ladybrownTake = false;
+
+
+#define distance_min 60
+
+const int ladybrown_values[] = {
+	0, 30, 150
+};
+
+static int ladybrown_goal_pos = 0;
 static bool ladyBrownActive = true;
 
-static bool ladybrownTake = false;
+static 	lemlib::PID lady_pid(1, 0, 2, 0);
+
+void set_ladybrown_goal_pos(int id) {
+	ladybrown_goal_pos = ladybrown_values[id];
+}
+
+
+
 
 /*
 const std::string names[] = {
@@ -104,15 +121,7 @@ double logDrive(double v, double pow = 2) {
     }
 }
 
-/**
- * A callback function for LLEMU's center button.
- *
- * When this callback is fired, it will toggle line 2 of the LCD text between
- * "I was pressed!" and nothing.
- */
-void on_center_button() {
 
-}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -133,10 +142,12 @@ void initialize() {
 			display_tick();
 			lemlib::Pose pose = chassis.getPose();
 			set_imu_info(pose.x, pose.y, pose.theta);
-			set_lady_info(ladyBrownActive, ladybrownTake, distance.get());
+			set_lady_info(ladyBrownActive, ladybrownTake, distance_sensor.get());
 			pros::c::task_delay(100);
         }
     } };
+
+	distance_sensor.calibrate();
 
 	/*
 	while (true) {
@@ -188,7 +199,6 @@ void autonomous() {
 	run_active_auton();
 }
 
-#define distance_min 60
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -213,7 +223,7 @@ void opcontrol() {
 	while (true) {
 		tick++;		
 
-		
+	
 		if (driveType == DriveType::Tank) {
 			int leftY = controller.get_analog(ANALOG_LEFT_Y);
 			int rightY = controller.get_analog(ANALOG_RIGHT_Y);
@@ -249,48 +259,42 @@ void opcontrol() {
 		}
 		*/
 
-		if (!ladybrownTake || !ladyBrownActive) {
-			if (controller.get_digital(DIGITAL_R1)) {
-				updateIntake(true, false);
-			} else if (controller.get_digital(DIGITAL_R2)) {
-				updateIntake(true, true);
-			} else if (intakeActive) {
-				updateIntake(false, false);
-			}
+		if (controller.get_digital(DIGITAL_R1)) {
+			updateIntake(true, false);
+		} else if (controller.get_digital(DIGITAL_R2)) {
+			updateIntake(true, true);
+		} else if (intakeActive) {
+			updateIntake(false, false);
 		}
-
-		if (controller.get_digital(DIGITAL_L1)) {
-			ladybrown.move(80);
-		} else if (controller.get_digital(DIGITAL_L2)) {
-			ladybrown.move(-80);
-		} else {
-			ladybrown.move(0);
-		}
-
-		if (controller.get_digital_new_press(DIGITAL_Y)) {
-			ladyBrownActive = !ladyBrownActive;
-			if (!ladyBrownActive) {
-				ladybrownTake = false;
-			}
+		
+		if (controller.get_digital_new_press(DIGITAL_L1)) {
+			set_ladybrown_goal_pos(2);
+			ladyBrownActive = true;
+		} else if (controller.get_digital_new_press(DIGITAL_L2)) {
+			set_ladybrown_goal_pos(0);
+			ladyBrownActive = true;
 		}
 
 		if (ladyBrownActive) {
-			if (distance.get() < distance_min && !ladybrownTake) {
-				ladybrownTake = true;
+			float error = ladybrown_goal_pos - lady_potentiometer_sensor.get_value();
+			float output = lady_pid.update(error);
+			ladybrown.move(output);
+			// TODO proper exit conditions
+			if (error < 10) {
+				lady_pid.reset();
 				intake.move(0);
-				newpos = intake.get_position() + 220;
-			} else if (ladybrownTake) {
-				float error = newpos - intake.get_position();
-				float output = lady_pid.update(error);
-				intake.move(output);
-				if (error < 10) {
-					lady_pid.reset();
-					intake.move(0);
-					ladybrownTake = false;
-					ladyBrownActive = false;
-				}
+				ladybrownTake = false;
+				ladyBrownActive = false;
 			}
+
 		}
+
+		if (controller.get_digital_new_press(DIGITAL_Y)) {
+			
+		}
+
+
+		*/
 
 		// delay to save resources
 		pros::delay(25);

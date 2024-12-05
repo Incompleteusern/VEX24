@@ -21,7 +21,7 @@
 
 #define DISTANCE_PORT 10
 #define COLOR_PORT 9
-
+#define POTENTIOMETER_PORT 3
 
 
 
@@ -34,8 +34,9 @@ pros::Motor m4(FIRST_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 pros::Motor m5(SECOND_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 pros::Motor m6(THIRD_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 
-pros::Distance distance(DISTANCE_PORT);
-pros::Optical color(COLOR_PORT);
+pros::Distance distance_sensor(DISTANCE_PORT);
+pros::Optical color_sensor(COLOR_PORT);
+pros::ADIAnalogIn lady_potentiometer_sensor (POTENTIOMETER_PORT);
 
 pros::MotorGroup left_motors({FIRST_LEFT_MOTOR_PORT, SECOND_LEFT_MOTOR_PORT, THIRD_LEFT_MOTOR_PORT}, pros::MotorGearset::blue); 
 pros::MotorGroup right_motors({FIRST_RIGHT_MOTOR_PORT, SECOND_RIGHT_MOTOR_PORT, THIRD_RIGHT_MOTOR_PORT}, pros::MotorGearset::blue); 

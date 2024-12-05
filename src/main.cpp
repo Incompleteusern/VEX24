@@ -149,6 +149,7 @@ void initialize() {
     } };
 
 	distance_sensor.calibrate();
+	ladybrown.setBrakeMode(E_MOTOR_BRAKE_HOLD);
 
 	/*
 	while (true) {
@@ -279,7 +280,6 @@ void opcontrol() {
 				ladyBrownActive = false;
 				if (lady_brown_id == 1) {
 					ladybrown.brake();
-					TODO LOOK AT
 				}
 			}
 		}

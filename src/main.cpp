@@ -23,7 +23,7 @@ static bool pistonActive = true;
 static bool ladybrownReady = false;
 static bool ladybrownTakeIntake = false;
 
-lemlib::PID ladybrown_pid(1, 0, 2, 0);
+lemlib::PID ladybrown_pid(0.3, 0, 0, 0);
 lemlib::PID intake_pid(1, 0, 0, 0);
 
 static float intake_goal = 0;
@@ -33,13 +33,14 @@ static float ladybrown_goal = 0;
 #define distance_min 60
 
 const float ladybrown_values[] = {
-	0, 30, 150
+	0, 90, 550
 };
 
-static bool ladyBrownActive = true;
+static bool ladyBrownActive = false;
 
-static lemlib::ExitCondition intake_exit(10, 200);
-static lemlib::ExitCondition ladybrown_exit(10, 200);
+static lemlib::ExitCondition intake_exit(500, 20);
+static lemlib::ExitCondition ladybrown_exit(500, 20);
+
 
 static int lady_brown_id = 0;
 
@@ -65,13 +66,14 @@ bool run_pid(float goal, float current, lemlib::PID pid, pros::Motor motor, leml
 
 }
 
+int intakespeed = 127;
 
 void updateIntake(bool active, bool toggle) {
 	if (!active) {
 		intake.move(0);
 	} else {
 		int sign = toggle ? -1 : 1;
-		intake.move(sign * 127);
+		intake.move(sign * intakespeed);
 	}
 
 	intakeActive = active;
@@ -143,13 +145,12 @@ void initialize() {
 			display_tick();
 			lemlib::Pose pose = chassis.getPose();
 			set_imu_info(pose.x, pose.y, pose.theta);
-			set_lady_info(ladybrownReady, ladybrownTakeIntake, distance_sensor.get());
+			set_lady_info(ladybrownReady, ladybrownTakeIntake, ladybrown.get_position());
 			pros::c::task_delay(100);
         }
     } };
 
-	distance_sensor.calibrate();
-	ladybrown.setBrakeMode(E_MOTOR_BRAKE_HOLD);
+	ladybrown.set_brake_mode(E_MOTOR_BRAKE_COAST);
 
 	/*
 	while (true) {
@@ -266,25 +267,57 @@ void opcontrol() {
 			}
 		}
 		
+		
 		if (controller.get_digital_new_press(DIGITAL_L1)) {
 			set_ladybrown_goal(2);
 			ladyBrownActive = true;
+			ladybrown_exit.reset();
 		} else if (controller.get_digital_new_press(DIGITAL_L2)) {
 			set_ladybrown_goal(0);
 			ladyBrownActive = true;
+			ladybrown_exit.reset();
 		}
 
+		/*
+		if (controller.get_digital(DIGITAL_L1)) {
+			ladybrown.move(127);
+		} else if (controller.get_digital(DIGITAL_L2)) {
+			ladybrown.move(-127);
+		} else {
+			ladybrown.move(0);
+		}
+		*/
+
+	if (controller.get_digital_new_press(DIGITAL_X)) {
+		ladybrown_pid.reset();
+		ladybrown.move(0);
+		ladyBrownActive = false;
+	}
+
+		
+
 		if (ladyBrownActive) {
-			bool cancel = run_pid(ladybrown_goal, lady_potentiometer_sensor.get_value(), ladybrown_pid, ladybrown, ladybrown_exit);
+			bool cancel = run_pid(ladybrown_goal, ladybrown.get_position(), ladybrown_pid, ladybrown, ladybrown_exit);
 			if (cancel) {
 				ladyBrownActive = false;
 				if (lady_brown_id == 1) {
 					ladybrown.brake();
+					ladybrown.set_brake_mode(E_MOTOR_BRAKE_HOLD);
+				} else {
+					ladybrown.set_brake_mode(E_MOTOR_BRAKE_COAST);
 				}
 			}
 		}
+		
+
+	if (controller.get_digital(DIGITAL_X)) {
+		intakespeed = std::min(intakespeed + 1, 127);
+	} else if (controller.get_digital(DIGITAL_Y)) {
+		intakespeed = std::max(intakespeed - 1, 0);
+	}
 
 
+		/*
 		if (controller.get_digital_new_press(DIGITAL_Y)) {
 			// move lady brown to starting position
 			ladybrownReady = !ladybrownReady;
@@ -295,6 +328,7 @@ void opcontrol() {
 			}
 			ladyBrownActive = true;
 		}
+		*/
 
 		if (ladybrownReady) {
 			if (distance_sensor.get() < distance_min && !ladybrownTakeIntake) {

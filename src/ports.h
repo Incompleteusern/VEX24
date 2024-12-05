@@ -8,3 +8,6 @@ extern pros::Motor ladybrown;
 
 
 extern pros::adi::DigitalOut piston;
+
+extern pros::Distance distance;
+extern pros::Optical color;

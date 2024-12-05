@@ -8,6 +8,23 @@ void set_active_auton(int id) {
 	activeAuton = id;
 }
 
+static void auton1() {
+    chassis.moveToPoint(0, 20, 4000);
+}
+
+static void auton2() {
+    chassis.moveToPoint(0, 1, 4000);
+}
+
+static void auton3() {
+    chassis.turnToHeading(270, 400000000);
+}
+
+static void auton4() {
+    chassis.turnToHeading(90, 4000);
+}
+
+
 void run_active_auton() {
 	chassis.cancelAllMotions();
 	switch (activeAuton) {
@@ -24,20 +41,4 @@ void run_active_auton() {
 			auton4();
 			break;
 	}
-}
-
-static void auton1() {
-    chassis.moveToPoint(0, 20, 4000);
-}
-
-static void auton2() {
-    chassis.moveToPoint(0, 1, 4000);
-}
-
-static void auton3() {
-    chassis.turnToHeading(270, 400000000);
-}
-
-static void auton4() {
-    chassis.turnToHeading(90, 4000);
 }

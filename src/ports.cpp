@@ -17,7 +17,11 @@
 #define INTAKE_PORT -20
 #define LADY_BROWN_PORT 2
 
-#define IMU_PORT 4
+#define IMU_PORT 24
+
+#define DISTANCE_PORT 10
+#define COLOR_PORT 9
+
 
 
 
@@ -30,6 +34,8 @@ pros::Motor m4(FIRST_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 pros::Motor m5(SECOND_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 pros::Motor m6(THIRD_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 
+pros::Distance distance(DISTANCE_PORT);
+pros::Optical color(COLOR_PORT);
 
 pros::MotorGroup left_motors({FIRST_LEFT_MOTOR_PORT, SECOND_LEFT_MOTOR_PORT, THIRD_LEFT_MOTOR_PORT}, pros::MotorGearset::blue); 
 pros::MotorGroup right_motors({FIRST_RIGHT_MOTOR_PORT, SECOND_RIGHT_MOTOR_PORT, THIRD_RIGHT_MOTOR_PORT}, pros::MotorGearset::blue); 

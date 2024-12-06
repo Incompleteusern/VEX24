@@ -145,7 +145,7 @@ void initialize() {
 			display_tick();
 			lemlib::Pose pose = chassis.getPose();
 			set_imu_info(pose.x, pose.y, pose.theta);
-			set_lady_info(ladybrownReady, ladybrownTakeIntake, ladybrown.get_position());
+			set_lady_info(ladybrownReady, ladybrownTakeIntake, lady_potentiometer_sensor.get_value());
 			pros::c::task_delay(100);
         }
     } };
@@ -297,7 +297,7 @@ void opcontrol() {
 		
 
 		if (ladyBrownActive) {
-			bool cancel = run_pid(ladybrown_goal, ladybrown.get_position(), ladybrown_pid, ladybrown, ladybrown_exit);
+			bool cancel = run_pid(ladybrown_goal, lady_potentiometer_sensor.get_value(), ladybrown_pid, ladybrown, ladybrown_exit);
 			if (cancel) {
 				ladyBrownActive = false;
 				if (lady_brown_id == 1) {

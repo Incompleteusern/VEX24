@@ -21,7 +21,7 @@
 
 #define DISTANCE_PORT 10
 #define COLOR_PORT 9
-#define POTENTIOMETER_PORT 3
+#define POTENTIOMETER_PORT 'C'
 
 
 

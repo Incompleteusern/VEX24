@@ -4,26 +4,25 @@
 
 static int activeAuton = 0;
 
-// ASSET(RedRightMidRush_txt)
-// ASSET(SixRingSoloWP_txt)
-// ASSET(RedLeftAWP_txt)
+ASSET(RedRightMidRush_txt)
+ASSET(SixRingSoloWP_txt)
+ASSET(RedLeftAWP_txt)
 
 void set_active_auton(int id) {
 	activeAuton = id;
 }
 
 static void auton1() {
-   //  chassis.follow(RedRightMidRush_txt, 20, 10000);
-	chassis.waitUntil(45);
+	chassis.follow(RedRightMidRush_txt, 20, 10000);
 	intake.move(127);
 }
 
 static void auton2() {
-    // chassis.follow(SixRingSoloWP_txt, 20, 10000);
+    chassis.follow(SixRingSoloWP_txt, 20, 10000);
 	}
 
 static void auton3() {
-    // chassis.follow(RedLeftAWP_txt, 20, 10000);
+    chassis.follow(RedLeftAWP_txt, 20, 10000);
 }
 
 static void auton4() {

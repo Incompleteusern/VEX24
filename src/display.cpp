@@ -41,9 +41,6 @@ LV_IMG_DECLARE(catplush);
 
 static lv_obj_t * catplush_img;
 
-extern bool do_auton_hack = true;
-extern int set_auton_id_hack = 1;
-
 static lv_style_t style_btn_pressed;
 static lv_style_t style_btn_red;
 static lv_style_t style_span;
@@ -172,11 +169,13 @@ void set_motor_info(bool currentIssue, bool tempIssue, double maxTemp, bool conn
     lv_obj_align(motorMaxTemp.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
 }
 
+
 void set_lady_info(bool ladybrown, bool ladybrownTake, float distance) {
     updateSpanOnOff(ladybrownOn.spanvalue, ladybrown);
     updateSpanOnOff(ladybrownTaking.spanvalue, ladybrownTake);
     updateSpanFloat(distanceSensor.spanvalue, distance);
 }
+
 
 static int piston_usage = 0;
 
@@ -350,16 +349,14 @@ static void auton_event_handler(lv_event_t * e)
     lv_obj_t * obj = lv_event_get_target(e);
     if(code == LV_EVENT_VALUE_CHANGED) {
         uint32_t id = lv_btnmatrix_get_selected_btn(obj);
-        // set_active_auton(id+1);
-        // set_auton_id_hack = d+1;
+        set_active_auton(id+1);
     }
 }
 
 static void run_auton_event_handler(lv_event_t * e) {
     lv_event_code_t code = lv_event_get_code(e);
     if(code == LV_EVENT_PRESSED) {
-        // run_active_auton();
-        do_auton_hack = true;
+        run_active_auton();
     }
 }
 

@@ -146,7 +146,7 @@ void initialize() {
 			display_tick();
 			lemlib::Pose pose = chassis.getPose();
 			set_imu_info(pose.x, pose.y, pose.theta);
-			set_lady_info(ladybrownReady, ladybrownTakeIntake, ladybrown.get_position());
+			set_lady_info(ladybrownReady, ladybrownTakeIntake, lady_potentiometer_sensor.get_value());
 			pros::c::task_delay(100);
         }
     } };

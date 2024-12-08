@@ -2,32 +2,44 @@
 #include "ports.h"
 #include "display.h"
 
-static int activeAuton = 0;
+ASSET(RedRightMidRush_txt)
+ASSET(SixRingSoloAWP_txt)
+ASSET(RedLeftAWP_txt)
 
-// ASSET(RedRightMidRush_txt)
-// ASSET(SixRingSoloWP_txt)
-// ASSET(RedLeftAWP_txt)
+static int activeAuton = 1;
 
-void set_active_auton(int id) {
-	activeAuton = id;
-}
+#define startingX -58.091
+#define startingY 43.439
+#define startingHeading 0
+
 
 static void auton1() {
-   //  chassis.follow(RedRightMidRush_txt, 20, 10000);
-	chassis.waitUntil(45);
-	intake.move(127);
+	// chassis.follow(RedRightMidRush_txt, 20, 10000);
+	// intake.move(127);
+	lemlib::MoveToPoseParams backwards = {
+		.forwards = false
+	};
+	chassis.moveToPoint(50, 0, 2000);
+
+
+// 	piston.set_value(1);
+	chassis.moveToPoint(0, 500, 2000);
 }
 
 static void auton2() {
-    // chassis.follow(SixRingSoloWP_txt, 20, 10000);
-	}
+    // chassis.follow(SixRingSoloAWP_txt, 20, 10000);
+}
 
 static void auton3() {
     // chassis.follow(RedLeftAWP_txt, 20, 10000);
 }
 
 static void auton4() {
-    chassis.turnToHeading(90, 4000);
+    // chassis.turnToHeading(90, 4000);
+}
+
+void set_active_auton(int id) {
+	activeAuton = id;
 }
 
 

@@ -17,7 +17,7 @@
 #define INTAKE_PORT -20
 #define LADY_BROWN_PORT 2
 
-#define IMU_PORT 24
+#define IMU_PORT 14
 
 #define DISTANCE_PORT 10
 #define COLOR_PORT 9

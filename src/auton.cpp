@@ -19,7 +19,7 @@ static void auton1() {
 	lemlib::MoveToPoseParams backwards = {
 		.forwards = false
 	};
-	chassis.moveToPoint(50, 0, 2000);
+	chassis.moveToPoint(30, 0, 2000);
 
 
 // 	piston.set_value(1);
@@ -45,6 +45,9 @@ void set_active_auton(int id) {
 
 void run_active_auton() {
 	chassis.cancelAllMotions();
+	chassis.moveToPoint(100, 0, 2000);
+
+	/*
 	switch (activeAuton) {
 		case 1:
             auton1();
@@ -59,4 +62,5 @@ void run_active_auton() {
 			auton4();
 			break;
 	}
+	*/
 }

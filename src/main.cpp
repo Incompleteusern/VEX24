@@ -17,38 +17,10 @@ static DriveType driveType = DriveType::Tank;
 
 static bool intakeActive = false;
 static bool pistonActive = true;
-static bool ladybrownOverride = false;
-
-// ladybrown setup and control
-
-static bool ladybrownReady = false;
-static bool ladybrownTakeIntake = false;
-
-lemlib::PID ladybrown_pid(0.3, 0, 0, 0);
-lemlib::PID intake_pid(1, 0, 0, 0);
 
 static float intake_goal = 0;
-static float ladybrown_goal = 0;
-
 
 #define distance_min 60
-
-const float ladybrown_values[] = {
-	40, 90, 550
-};
-
-static bool ladyBrownActive = false;
-
-static lemlib::ExitCondition intake_exit(50, 100);
-static lemlib::ExitCondition ladybrown_exit(50, 100);
-
-
-static int lady_brown_id = 0;
-
-void set_ladybrown_goal(int id) {
-	lady_brown_id = id;
-	ladybrown_goal = ladybrown_values[id];
-}
 
 bool run_pid(float goal, float current, lemlib::PID pid, pros::Motor motor, lemlib::ExitCondition* exit) {
 	float error = goal - current;
@@ -254,81 +226,6 @@ void opcontrol() {
 		} else if (intakeActive) {
 			updateIntake(false, false);
 		}
-
-		
-		if (!ladybrownOverride) {
-			if (controller.get_digital_new_press(DIGITAL_L1)) {
-				set_ladybrown_goal(2);
-				ladyBrownActive = true;
-				ladybrown_exit.reset();
-			} else if (controller.get_digital_new_press(DIGITAL_L2)) {
-				set_ladybrown_goal(0);
-				ladyBrownActive = true;
-				ladybrown_exit.reset();
-			}
-		} else {
-			ladybrown.set_brake_mode(E_MOTOR_BRAKE_COAST);
-
-			if (controller.get_digital(DIGITAL_L1)) {
-				ladybrown.move(80);
-			} else if (controller.get_digital(DIGITAL_L2)) {
-				ladybrown.move(-80);
-			} else {
-				ladybrown.move(0);
-				ladybrown.set_brake_mode(E_MOTOR_BRAKE_BRAKE);
-				ladybrown.brake();
-
-			}
-
-		}
-
-
-		if (controller.get_digital_new_press(DIGITAL_X)) {
-			ladybrown_pid.reset();
-			ladybrown.move(0);
-			ladyBrownActive = false;
-		} 
-		else if (controller.get_digital_new_press(DIGITAL_Y)) {
-			ladybrownOverride = !ladybrownOverride;
-		}
-
-		if (ladyBrownActive && !ladybrownOverride) {
-			bool cancel = run_pid(ladybrown_goal, ladybrown.get_position(), ladybrown_pid, ladybrown, &ladybrown_exit);
-			if (cancel) {
-				ladyBrownActive = false;
-				if (lady_brown_id == 1) {
-					ladybrown.brake();
-					ladybrown.set_brake_mode(E_MOTOR_BRAKE_BRAKE);
-				} else {
-					ladybrown.set_brake_mode(E_MOTOR_BRAKE_COAST);
-				}
-			}
-		}
-			
-
-
-
-		/*
-		if (controller.get_digital_new_press(DIGITAL_Y)) {
-			// move lady brown to starting position
-			ladybrownReady = !ladybrownReady;
-			if (ladybrownReady) {
-				set_ladybrown_goal(1);
-			} else {
-				set_ladybrown_goal(0);
-			}
-			ladyBrownActive = true;
-		}
-		*/
-
-		if (ladybrownReady) {
-			if (distance_sensor.get() < distance_min && !ladybrownTakeIntake) {
-				ladybrownTakeIntake = true;
-				intake_goal = intake.get_position() + 220;
-			}
-		}
-
-
 
 		// delay to save resources
 		pros::delay(25);

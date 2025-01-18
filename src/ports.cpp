@@ -15,7 +15,6 @@
 #define THIRD_RIGHT_MOTOR_PORT 19
 
 #define INTAKE_PORT -20
-#define LADY_BROWN_PORT 2
 
 #define IMU_PORT 14
 
@@ -34,15 +33,14 @@ pros::Motor m4(FIRST_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 pros::Motor m5(SECOND_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 pros::Motor m6(THIRD_RIGHT_MOTOR_PORT, pros::MotorGearset::blue);
 
-pros::Distance distance_sensor(DISTANCE_PORT);
-pros::Optical color_sensor(COLOR_PORT);
-pros::ADIAnalogIn lady_potentiometer_sensor (POTENTIOMETER_PORT);
+// pros::Distance distance_sensor(DISTANCE_PORT);
+// pros::Optical color_sensor(COLOR_PORT);
+// pros::ADIAnalogIn lady_potentiometer_sensor (POTENTIOMETER_PORT);
 
 pros::MotorGroup left_motors({FIRST_LEFT_MOTOR_PORT, SECOND_LEFT_MOTOR_PORT, THIRD_LEFT_MOTOR_PORT}, pros::MotorGearset::blue); 
 pros::MotorGroup right_motors({FIRST_RIGHT_MOTOR_PORT, SECOND_RIGHT_MOTOR_PORT, THIRD_RIGHT_MOTOR_PORT}, pros::MotorGearset::blue); 
 
 pros::Motor intake(INTAKE_PORT, pros::MotorGearset::blue);
-pros::Motor ladybrown(LADY_BROWN_PORT, pros::MotorGearset::green);
 
 std::vector<pros::Motor> motors = {m1, m2, m3, m4, m5, m6, intake}; //, ladybrown};
 

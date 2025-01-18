@@ -90,9 +90,7 @@ static span_label motorOverTemp;
 static span_label motorOverCurrent;
 static span_label motorNotConnected;
 
-static span_label ladybrownOn;
-static span_label ladybrownTaking;
-static span_label distanceSensor;
+// static span_label distanceSensor;
 
 
 /*
@@ -169,12 +167,6 @@ void set_motor_info(bool currentIssue, bool tempIssue, double maxTemp, bool conn
     lv_obj_align(motorMaxTemp.spangroup, LV_ALIGN_LEFT_MID, 0, 0);
 }
 
-
-void set_lady_info(bool ladybrown, bool ladybrownTake, float distance) {
-    updateSpanOnOff(ladybrownOn.spanvalue, ladybrown);
-    updateSpanOnOff(ladybrownTaking.spanvalue, ladybrownTake);
-    updateSpanFloat(distanceSensor.spanvalue, distance);
-}
 
 
 static int piston_usage = 0;
@@ -333,14 +325,8 @@ static void info_display(lv_obj_t* parent) {
     lv_span_set_text(pistonUses.spanvalue, "0");
     lv_style_set_text_color(&pistonUses.spanvalue->style, lv_color_hex(cat_teal));
 
-    ladybrownOn = create_span_label("Lady On: ", subconts[1]);
-    updateSpanOnOff(ladybrownOn.spanvalue, false);
-
-    ladybrownTaking = create_span_label("Lady Taking: ", subconts[1]);
-    updateSpanOnOff(ladybrownTaking.spanvalue, false);
-
-    distanceSensor = create_span_label("Distance Sensor: ", subconts[1]);
-    updateSpanFloat(distanceSensor.spanvalue, 0);
+    // distanceSensor = create_span_label("Distance Sensor: ", subconts[1]);
+    // updateSpanFloat(distanceSensor.spanvalue, 0);
 }
 
 static void auton_event_handler(lv_event_t * e)

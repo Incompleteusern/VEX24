@@ -8,22 +8,24 @@ ASSET(RedLeftAWP_txt)
 
 static int activeAuton = 1;
 
-#define startingX -58.091
-#define startingY 43.439
-#define startingHeading 0
-
-
 static void auton1() {
+	// chassis.setPose(lemlib::Pose(0, 0, 0));
+	chassis.moveToPoint(0, 12, 2000);
+	chassis.waitUntilDone();
+	// pros::delay(1400);
+
+	//intake.move(127);
+
 	// chassis.follow(RedRightMidRush_txt, 20, 10000);
 	// intake.move(127);
-	lemlib::MoveToPoseParams backwards = {
-		.forwards = false
-	};
-	chassis.moveToPoint(30, 0, 2000);
+	// lemlib::MoveToPoseParams backwards = {
+	// 	.forwards = false
+	// };
+	// chassis.moveToPoint(30, 0, 2000);
 
 
 // 	piston.set_value(1);
-	chassis.moveToPoint(0, 500, 2000);
+	// chassis.moveToPoint(0, 500, 2000);
 }
 
 static void auton2() {
@@ -44,8 +46,8 @@ void set_active_auton(int id) {
 
 
 void run_active_auton() {
-	chassis.cancelAllMotions();
-	chassis.moveToPoint(100, 0, 2000);
+	auton1();
+
 
 	/*
 	switch (activeAuton) {

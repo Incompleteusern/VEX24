@@ -6,23 +6,21 @@
 #define wheel_type lemlib::Omniwheel::NEW_275
 #define ANALOG_SENSOR_PORT 'A'
 
-#define FIRST_LEFT_MOTOR_PORT -11
-#define SECOND_LEFT_MOTOR_PORT -12
-#define THIRD_LEFT_MOTOR_PORT 13
+#define FIRST_RIGHT_MOTOR_PORT 11
+#define SECOND_RIGHT_MOTOR_PORT 12
+#define THIRD_RIGHT_MOTOR_PORT -13
 
-#define FIRST_RIGHT_MOTOR_PORT -17
-#define SECOND_RIGHT_MOTOR_PORT 18
-#define THIRD_RIGHT_MOTOR_PORT 19
+#define FIRST_LEFT_MOTOR_PORT 17
+#define SECOND_LEFT_MOTOR_PORT -18
+#define THIRD_LEFT_MOTOR_PORT -14
 
 #define INTAKE_PORT -20
 
-#define IMU_PORT 14
+#define IMU_PORT 1
 
 #define DISTANCE_PORT 10
 #define COLOR_PORT 9
 #define POTENTIOMETER_PORT 'C'
-
-
 
 pros::adi::DigitalOut piston (ANALOG_SENSOR_PORT);
 
@@ -58,7 +56,7 @@ lemlib::OdomSensors sensors(nullptr, // vertical tracking wheel 1, set to null
                             nullptr, // vertical tracking wheel 2, set to nullptr as we are using IMEs
                             nullptr, // horizontal tracking wheel 1
                             nullptr, // horizontal tracking wheel 2, set to nullptr as we don't have a second one
-                            &imu // &imu // inertial sensor
+                            &imu // inertial sensor
 );
 
 // lateral PID controller

@@ -101,7 +101,9 @@ void poll_motor_info() {
 	prevTempIssue = tempIssue;
 	prevConnectionIssue = connectionIssue;
 
-	set_motor_info(currentIssue, tempIssue, maxTemp, connectionIssue);	
+	set_motor_info(currentIssue, tempIssue, maxTemp, connectionIssue);
+	auto pose = chassis.getPose();
+	set_imu_info(pose.x, pose.y, pose.theta);
 }
 
 double logDrive(double v, double pow = 2) {
@@ -182,12 +184,8 @@ void autonomous() {
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
-void opcontrol() {
-	
-	int tick = 0;
-
+void opcontrol() {	
 	while (true) {
-		tick++;
 		// TODO REPLACE with millis
 	
 		if (driveType == DriveType::Tank) {
@@ -226,6 +224,8 @@ void opcontrol() {
 		} else if (intakeActive) {
 			updateIntake(false, false);
 		}
+
+		poll_motor_info();
 
 		// delay to save resources
 		pros::delay(25);
